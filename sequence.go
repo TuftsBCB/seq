@@ -28,7 +28,7 @@ func (s Sequence) Copy() Sequence {
 func (s Sequence) Bytes() []byte {
 	bs := make([]byte, len(s.Residues))
 	for i := range s.Residues {
-		bs[i] = s.Residues[i]
+		bs[i] = byte(s.Residues[i])
 	}
 	return bs
 }
