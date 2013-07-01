@@ -24,6 +24,15 @@ func (s Sequence) Copy() Sequence {
 	}
 }
 
+// Bytes returns the sequence of residues as a byte slice.
+func (s Sequence) Bytes() []byte {
+	bs := make([]byte, len(s.Residues))
+	for i := range s.Residues {
+		bs[i] = s.Residues[i]
+	}
+	return bs
+}
+
 // Slice returns a slice of the sequence. The name stays the same, and the
 // sequence of residues corresponds to a Go slice of the original.
 // (This does not copy data, so that if the original or sliced sequence is
