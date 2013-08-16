@@ -16,7 +16,7 @@ func newAlignment(length int) Alignment {
 }
 
 func NeedlemanWunsch(A, B []Residue) Alignment {
-	// This implementation is taken from the "Needleman–Wunsch_algorithm"
+	// This implementation is taken from the "Needleman-Wunsch_algorithm"
 	// Wikipedia article.
 	// rows correspond to residues in A
 	// cols correspond to residues in B
