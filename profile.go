@@ -78,14 +78,12 @@ func NewNullProfile() *FrequencyProfile {
 
 // NewFrequencyProfile initializes a frequency profile with a default
 // alphabet that is compatible with this package's BLOSUM62 matrix.
-// Pseudo-count correction using Laplace's Rule is automatically applied.
 func NewFrequencyProfile(columns int) *FrequencyProfile {
 	return NewFrequencyProfileAlphabet(columns, AlphaBlosum62)
 }
 
 // NewFrequencyProfileAlphabet initializes a frequency profile with the
 // given alphabet.
-// Pseudo-count correction using Laplace's Rule is automatically applied.
 func NewFrequencyProfileAlphabet(
 	columns int,
 	alphabet Alphabet,
@@ -94,7 +92,7 @@ func NewFrequencyProfileAlphabet(
 	for i := 0; i < columns; i++ {
 		freqs[i] = make(map[Residue]int, len(alphabet))
 		for _, residue := range alphabet {
-			freqs[i][residue] = 1 // Laplace's rule
+			freqs[i][residue] = 0
 		}
 	}
 	return &FrequencyProfile{freqs, alphabet}
@@ -133,8 +131,6 @@ func (fp *FrequencyProfile) Add(s Sequence) {
 // Profile converts a raw frequency profile to a profile that uses a log-odds
 // representation. The log-odds scores are computed with the given null model,
 // which is itself just a raw frequency profile with a single column.
-// Pseudo-count correction using Laplace's Rule is automatically applied.
-// The alphabets of `fp` and `null` must be exactly the same.
 func (fp *FrequencyProfile) Profile(null *FrequencyProfile) *Profile {
 	if null.Len() != 1 {
 		panic(fmt.Sprintf("null model has %d columns; should have 1",
@@ -157,9 +153,13 @@ func (fp *FrequencyProfile) Profile(null *FrequencyProfile) *Profile {
 	for column := 0; column < fp.Len(); column++ {
 		tot := freqTotal(fp.Freqs[column])
 		for _, residue := range fp.Alphabet {
-			prob := float64(fp.Freqs[column][residue]) / float64(tot)
-			logOdds := Prob(math.Log(prob / nullemit[residue]))
-			p.Emissions[column][residue] = logOdds
+			if null.Freqs[0][residue] == 0 || fp.Freqs[column][residue] == 0 {
+				p.Emissions[column][residue] = MinProb
+			} else {
+				prob := float64(fp.Freqs[column][residue]) / float64(tot)
+				logOdds := -Prob(math.Log(prob / nullemit[residue]))
+				p.Emissions[column][residue] = logOdds
+			}
 		}
 	}
 	return p
