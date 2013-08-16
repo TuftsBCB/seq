@@ -1,5 +1,9 @@
 package seq
 
+import (
+	"encoding/json"
+)
+
 type Alphabet []Residue
 
 func NewAlphabet(residues ...Residue) Alphabet {
@@ -29,6 +33,23 @@ func (a Alphabet) String() string {
 		bs[i] = byte(residue)
 	}
 	return string(bs)
+}
+
+func (a *Alphabet) MarshalJSON() ([]byte, error) {
+	return json.Marshal(a.String())
+}
+
+func (a *Alphabet) UnmarshalJSON(bs []byte) error {
+	var str string
+	if err := json.Unmarshal(bs, &str); err != nil {
+		return err
+	}
+
+	*a = make(Alphabet, len(str))
+	for i := 0; i < len(str); i++ {
+		(*a)[i] = Residue(str[i])
+	}
+	return nil
 }
 
 const alpha62letters = "ABCDEFGHIKLMNPQRSTVWXYZ-"

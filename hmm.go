@@ -1,6 +1,7 @@
 package seq
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -61,6 +62,28 @@ func (ep EProbs) EmitProb(r Residue) Prob {
 	return ep[r]
 }
 
+func (ep *EProbs) MarshalJSON() ([]byte, error) {
+	strmap := make(map[string]Prob, len(*ep))
+	for k, v := range *ep {
+		strmap[string(k)] = v
+	}
+	return json.Marshal(strmap)
+}
+
+func (ep *EProbs) UnmarshalJSON(bs []byte) error {
+	var strmap map[string]Prob
+	if err := json.Unmarshal(bs, &strmap); err != nil {
+		return err
+	}
+	if *ep == nil {
+		*ep = make(EProbs, len(strmap))
+	}
+	for k, v := range strmap {
+		(*ep)[Residue(k[0])] = v
+	}
+	return nil
+}
+
 // TProbs represents transition probabilities, as log-odds scores.
 // Note that ID and DI are omitted (Plan7).
 type TProbs struct {
@@ -97,6 +120,32 @@ func NewProb(fstr string) (Prob, error) {
 // IsMin returns true if the probability is minimal.
 func (p Prob) IsMin() bool {
 	return p == MinProb
+}
+
+// String returns a string representation of the probability.
+// When `p` is the minimum probability, then "*" is used.
+// Otherwise, the full number is written.
+func (p Prob) String() string {
+	if p.IsMin() {
+		return "*"
+	}
+	return fmt.Sprintf("%v", float64(p))
+}
+
+func (p Prob) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.String())
+}
+
+func (p *Prob) UnmarshalJSON(bs []byte) error {
+	var str string
+	var err error
+	if err := json.Unmarshal(bs, &str); err != nil {
+		return err
+	}
+	if *p, err = NewProb(str); err != nil {
+		return err
+	}
+	return nil
 }
 
 // NewHMM creates a new HMM from a list of nodes, an ordered alphabet and a
