@@ -69,6 +69,21 @@ type FrequencyProfile struct {
 	Alphabet Alphabet
 }
 
+func (fp *FrequencyProfile) String() string {
+	buf := new(bytes.Buffer)
+	tabw := tabwriter.NewWriter(buf, 4, 0, 3, ' ', 0)
+	pf := func(ft string, v ...interface{}) { fmt.Fprintf(tabw, ft, v...) }
+	for _, r := range fp.Alphabet {
+		pf("%c", rune(r))
+		for _, column := range fp.Freqs {
+			pf("\t%d", column[r])
+		}
+		pf("\n")
+	}
+	tabw.Flush()
+	return buf.String()
+}
+
 // NewNullProfile initializes a frequency profile that can be used to tabulate
 // a null model. This is equivalent to calling NewFrequencyProfile with the
 // number of columns set to 1.
