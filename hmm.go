@@ -117,6 +117,11 @@ func NewProb(fstr string) (Prob, error) {
 	return Prob(f), nil
 }
 
+// Less returns true if `p1` represents a smaller probability than `p2`.
+func (p1 Prob) Less(p2 Prob) bool {
+	return p1 > p2
+}
+
 // IsMin returns true if the probability is minimal.
 func (p Prob) IsMin() bool {
 	return p == MinProb
