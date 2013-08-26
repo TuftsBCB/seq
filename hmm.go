@@ -96,7 +96,7 @@ type Prob float64
 var invalidProb = Prob(math.NaN())
 
 // The value representing a minimum emission/transition probability.
-// Remember, max in log space is minimum probability.
+// Remember, max in negative log space is minimum probability.
 var MinProb = Prob(math.MaxFloat64)
 
 // NewProb creates a new probability value from a string (usually read from
@@ -125,6 +125,20 @@ func (p1 Prob) Less(p2 Prob) bool {
 // IsMin returns true if the probability is minimal.
 func (p Prob) IsMin() bool {
 	return p == MinProb
+}
+
+// Ratio returns the log probability as a ratio in the range [0, 1].
+// (This assumes that `p` is a log-odds score.)
+func (p Prob) Ratio() float64 {
+	if p.IsMin() {
+		return 0.0
+	}
+	return math.Exp(-(float64(p)))
+}
+
+// Distance returns the distance between `p1` and `p2`.
+func (p1 Prob) Distance(p2 Prob) float64 {
+	return math.Abs(float64(p1) - float64(p2))
 }
 
 // String returns a string representation of the probability.
