@@ -1,6 +1,6 @@
 package seq
 
-type matLookup func(Residue, Residue) int
+type MatLookup func(Residue, Residue) int
 
 func getBlosum62(a, b Residue) int {
 	ai, ok := alpha62map[a]

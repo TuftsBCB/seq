@@ -10,7 +10,7 @@ func TestNeedlemanWunsch(t *testing.T) {
 	type test struct {
 		seq1, seq2 string
 		out1, out2 string
-		subst matLookup
+		subst MatLookup
 	}
 
 	tests := []test{

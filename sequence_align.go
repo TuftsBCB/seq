@@ -15,12 +15,12 @@ func newAlignment(length int) Alignment {
 	}
 }
 
-func NeedlemanWunsch(A, B []Residue, subst matLookup) Alignment {
+func NeedlemanWunsch(A, B []Residue, subst MatLookup) Alignment {
 	// This implementation is taken from the "Needleman-Wunsch_algorithm"
 	// Wikipedia article.
 	// rows correspond to residues in A
 	// cols correspond to residues in B
-	// subst must be a matLookup function, e.g. getBlosum62, getDNA, or getRNA
+	// subst must be a MatLookup function, e.g. getBlosum62, getDNA, or getRNA
 
 	// Initialization.
 	gapPenalty := subst('A', '-')
