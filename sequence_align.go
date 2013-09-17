@@ -15,14 +15,15 @@ func newAlignment(length int) Alignment {
 	}
 }
 
-func NeedlemanWunsch(A, B []Residue) Alignment {
+func NeedlemanWunsch(A, B []Residue, subst matLookup) Alignment {
 	// This implementation is taken from the "Needleman-Wunsch_algorithm"
 	// Wikipedia article.
 	// rows correspond to residues in A
 	// cols correspond to residues in B
+	// subst must be a matLookup function, e.g. getBlosum62, getDNA, or getRNA
 
 	// Initialization.
-	gapPenalty := getSim62('A', '-')
+	gapPenalty := subst('A', '-')
 	matrix := make([][]int, len(A)*len(B))
 
 	// Compute the matrix.
@@ -36,7 +37,7 @@ func NeedlemanWunsch(A, B []Residue) Alignment {
 	for i := 1; i < len(A); i++ {
 		for j := 1; j < len(B); j++ {
 			matrix[i][j] = max3(
-				matrix[i-1][j-1]+getSim62(A[i], B[j]),
+				matrix[i-1][j-1]+subst(A[i], B[j]),
 				matrix[i-1][j]+gapPenalty,
 				matrix[i][j-1]+gapPenalty)
 		}
@@ -51,7 +52,7 @@ func NeedlemanWunsch(A, B []Residue) Alignment {
 		// sup := matrix[i][j-1]
 		sleft := matrix[i-1][j]
 		switch {
-		case s == sdiag+getSim62(A[i], B[j]):
+		case s == sdiag+subst(A[i], B[j]):
 			aligned.A = append(aligned.A, A[i])
 			aligned.B = append(aligned.B, B[j])
 			i--

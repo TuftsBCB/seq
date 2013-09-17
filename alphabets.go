@@ -60,3 +60,14 @@ var AlphaBlosum62 = NewAlphabet(
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M',
 	'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z', '-',
 )
+
+const alphaDNAletters = "ACTGN-"
+const alphaRNAletters = "ACUGN-"
+
+var AlphaDNA = NewAlphabet(
+	'A', 'C', 'G', 'T', 'N', '-',
+)
+
+var AlphaRNA = NewAlphabet(
+	'A', 'C', 'G', 'U', 'N', '-',
+)

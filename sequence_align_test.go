@@ -10,6 +10,7 @@ func TestNeedlemanWunsch(t *testing.T) {
 	type test struct {
 		seq1, seq2 string
 		out1, out2 string
+		subst matLookup
 	}
 
 	tests := []test{
@@ -18,42 +19,49 @@ func TestNeedlemanWunsch(t *testing.T) {
 			"ABCD",
 			"ABCD",
 			"ABCD",
+			getBlosum62,
 		},
 		{
 			"GHIKLMNPQR",
 			"GAAAHIKLMN",
 			"---GHIKLMNPQR",
 			"GAAAHIKLMN---",
+			getBlosum62,
 		},
 		{
 			"GHIKLMNPQRSTVW",
 			"GAAAHIKLMNPQRSTVW",
 			"---GHIKLMNPQRSTVW",
 			"GAAAHIKLMNPQRSTVW",
+			getBlosum62,
 		},
 		{
 			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
 			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
 			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
 			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+			getBlosum62,
 		},
 		{
 			"NNNNNNNN",
 			"NNNNNNNN",
 			"NNNNNNNN",
 			"NNNNNNNN",
+			getBlosum62,
 		},
 		{
 			"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
 			"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
 			"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
 			"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
+			getBlosum62,
 		},
 		{
 			"ABCDEFGWXYZ",
 			"ABCDEFMNPQRSTZABEGWXYZ",
 			"ABCDEF-----------GWXYZ",
 			"ABCDEFMNPQRSTZABEGWXYZ",
+			getBlosum62,
 		},
 		{
 			"ASAECVSNENVEIEAPKTNIWTSLAKEEVQEVLDLLHSTYNITEVTKADFFSNYVLWIETLKPN" +
@@ -108,12 +116,21 @@ func TestNeedlemanWunsch(t *testing.T) {
 				"TKHKDTELRSSTALNTNALYDPPVNFNAFLDDESLDGEDIVAWVNLGLHHLPNSNDLPNT" +
 				"IFSTAHASFMLTPFNYFDSENSRDTTQQVFYTYDDETEESNWEFYGNDWSSCGVEVAEPN" +
 				"FEDYTYGRGTRINKK--------",
+				getBlosum62,
+		},
+		{
+			"ACTG",
+			"ACTG",
+			"ACTG",
+			"ACTG",
+			getDNA,
 		},
 	}
 	sep := strings.Repeat("-", 45)
 	for _, test := range tests {
 		s1, s2 := stringToSeq(test.seq1), stringToSeq(test.seq2)
-		aligned := NeedlemanWunsch(s1, s2)
+		substitution := test.subst
+		aligned := NeedlemanWunsch(s1, s2, substitution)
 		sout1 := fmt.Sprintf("%s", aligned.A)
 		sout2 := fmt.Sprintf("%s", aligned.B)
 
