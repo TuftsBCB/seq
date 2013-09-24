@@ -10,7 +10,7 @@ func TestNeedlemanWunsch(t *testing.T) {
 	type test struct {
 		seq1, seq2 string
 		out1, out2 string
-		subst MatLookup
+		subst      MatLookup
 	}
 
 	tests := []test{
@@ -19,49 +19,49 @@ func TestNeedlemanWunsch(t *testing.T) {
 			"ABCD",
 			"ABCD",
 			"ABCD",
-			getBlosum62,
+			MatBlosum62,
 		},
 		{
 			"GHIKLMNPQR",
 			"GAAAHIKLMN",
 			"---GHIKLMNPQR",
 			"GAAAHIKLMN---",
-			getBlosum62,
+			MatBlosum62,
 		},
 		{
 			"GHIKLMNPQRSTVW",
 			"GAAAHIKLMNPQRSTVW",
 			"---GHIKLMNPQRSTVW",
 			"GAAAHIKLMNPQRSTVW",
-			getBlosum62,
+			MatBlosum62,
 		},
 		{
 			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
 			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
 			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
 			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-			getBlosum62,
+			MatBlosum62,
 		},
 		{
 			"NNNNNNNN",
 			"NNNNNNNN",
 			"NNNNNNNN",
 			"NNNNNNNN",
-			getBlosum62,
+			MatBlosum62,
 		},
 		{
 			"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
 			"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
 			"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
 			"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
-			getBlosum62,
+			MatBlosum62,
 		},
 		{
 			"ABCDEFGWXYZ",
 			"ABCDEFMNPQRSTZABEGWXYZ",
 			"ABCDEF-----------GWXYZ",
 			"ABCDEFMNPQRSTZABEGWXYZ",
-			getBlosum62,
+			MatBlosum62,
 		},
 		{
 			"ASAECVSNENVEIEAPKTNIWTSLAKEEVQEVLDLLHSTYNITEVTKADFFSNYVLWIETLKPN" +
@@ -116,14 +116,14 @@ func TestNeedlemanWunsch(t *testing.T) {
 				"TKHKDTELRSSTALNTNALYDPPVNFNAFLDDESLDGEDIVAWVNLGLHHLPNSNDLPNT" +
 				"IFSTAHASFMLTPFNYFDSENSRDTTQQVFYTYDDETEESNWEFYGNDWSSCGVEVAEPN" +
 				"FEDYTYGRGTRINKK--------",
-				getBlosum62,
+			MatBlosum62,
 		},
 		{
 			"ACTG",
 			"ACTG",
 			"ACTG",
 			"ACTG",
-			getDNA,
+			MatDNA,
 		},
 	}
 	sep := strings.Repeat("-", 45)

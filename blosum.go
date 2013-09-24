@@ -1,8 +1,11 @@
 package seq
 
+// MatLookup represents functions that return a score usable in sequence
+// alignment algorithms for a pair of residues. It should return a score
+// appropriate for gaps, e.g., `Lookup('-', '-')`.
 type MatLookup func(Residue, Residue) int
 
-func getBlosum62(a, b Residue) int {
+func MatBlosum62(a, b Residue) int {
 	ai, ok := alpha62map[a]
 	if !ok {
 		ai = alpha62map['X']
@@ -14,7 +17,7 @@ func getBlosum62(a, b Residue) int {
 	return blosum62[ai][bi]
 }
 
-func getDNA(a, b Residue) int {
+func MatDNA(a, b Residue) int {
 	ai, ok := alphaDNAmap[a]
 	if !ok {
 		ai = alphaDNAmap['N']
@@ -26,7 +29,7 @@ func getDNA(a, b Residue) int {
 	return identity[ai][bi]
 }
 
-func getRNA(a, b Residue) int {
+func MatRNA(a, b Residue) int {
 	ai, ok := alphaRNAmap[a]
 	if !ok {
 		ai = alphaDNAmap['N']
@@ -51,13 +54,13 @@ func init() {
 }
 
 func init() {
-	for i,r := range AlphaDNA {
+	for i, r := range AlphaDNA {
 		alphaDNAmap[r] = i
 	}
 }
 
 func init() {
-	for i,r := range AlphaRNA {
+	for i, r := range AlphaRNA {
 		alphaRNAmap[r] = i
 	}
 }
@@ -66,16 +69,16 @@ type substmatrix [][]int
 
 var identity = substmatrix{
 	{
-		2, -1, -1, -1, 0, 0, 
+		2, -1, -1, -1, 0, 0,
 	},
 	{
-		-1, 2, -1, -1, 0, 0, 
+		-1, 2, -1, -1, 0, 0,
 	},
 	{
-		-1, -1, 2, -1, 0, 0, 
+		-1, -1, 2, -1, 0, 0,
 	},
 	{
-		-1, -1, -1, 2, 0, 0, 
+		-1, -1, -1, 2, 0, 0,
 	},
 	{
 		0, 0, 0, 0, 0, 0,
@@ -182,6 +185,6 @@ var blosum62 = substmatrix{
 	},
 	{
 		-4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0,
-		-4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, 0.0,
+		-4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0,
 	},
 }

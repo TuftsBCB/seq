@@ -15,15 +15,18 @@ func newAlignment(length int) Alignment {
 	}
 }
 
+// Performs the Needleman-Wunsch sequence alignment algorithm on a pair
+// of sequences. A function `subst` should return alignment scores for
+// pairs of residues. This package provides some functions suitable for
+// this purpose, e.g., MatBlosum62, MatDNA, MatRNA, etc.
 func NeedlemanWunsch(A, B []Residue, subst MatLookup) Alignment {
 	// This implementation is taken from the "Needleman-Wunsch_algorithm"
 	// Wikipedia article.
 	// rows correspond to residues in A
 	// cols correspond to residues in B
-	// subst must be a MatLookup function, e.g. getBlosum62, getDNA, or getRNA
 
 	// Initialization.
-	gapPenalty := subst('A', '-')
+	gapPenalty := subst('-', '-')
 	matrix := make([][]int, len(A)*len(B))
 
 	// Compute the matrix.
