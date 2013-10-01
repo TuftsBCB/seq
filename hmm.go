@@ -33,6 +33,77 @@ type HMM struct {
 	Null EProbs
 }
 
+type dynamicTable struct {
+	scores []Prob
+	nodes  int
+}
+
+// allocTable returns a freshly allocated dynamic programming table for use
+// in HMM alogirthms like Viterbi. It is indexed by HMM state, node index and
+// sequence length, in that order. The total size of the table is equal to
+// (#states * (#nodes + 1) * (seqLen + 1)).
+//
+// The only states used are Match, Deletion and Insertion.
+//
+// Each value is initialized to a minimum probability.
+func (hmm *HMM) allocTable(seqLen int) *dynamicTable {
+	nodes := len(hmm.Nodes) + 1
+	t := &dynamicTable{
+		scores: make([]Prob, 3*nodes*(seqLen+1)),
+		nodes:  nodes,
+	}
+	for i := 0; i < len(t.scores); i++ {
+		t.scores[i] = MinProb
+	}
+	return t
+}
+
+func (t *dynamicTable) cell(state HMMState, node int, obs int) *Prob {
+	return &t.scores[int(state)+3*(node+t.nodes*obs)]
+}
+
+func (t *dynamicTable) set(state HMMState, node int, obs int, p Prob) {
+	succ := t.cell(state, node, obs)
+	if p < *succ {
+		*succ = p
+	}
+}
+
+func (hmm *HMM) ViterbiScore(seq Sequence) Prob {
+	table := hmm.allocTable(seq.Len())
+	*table.cell(Match, 0, 0) = Prob(0.0) // The begin node.
+
+	var trans TProbs
+	var residue Residue
+	var memit, iemit, here Prob
+	for node := 0; node < len(hmm.Nodes); node++ {
+		for obs := 0; obs < seq.Len(); obs++ {
+			trans = hmm.Nodes[node].Transitions
+			residue = seq.Residues[obs]
+			iemit = hmm.Nodes[node].InsEmit[residue]
+			if node+1 < len(hmm.Nodes) {
+				memit = hmm.Nodes[node+1].MatEmit[residue]
+			} else {
+				memit = 0.0
+			}
+
+			here = *table.cell(Match, node, obs)
+			table.set(Insertion, node, obs+1, here+trans.MI+iemit)
+			table.set(Match, node+1, obs+1, here+trans.MM+memit)
+			table.set(Deletion, node+1, obs, here+trans.MD)
+
+			here = *table.cell(Insertion, node, obs)
+			table.set(Insertion, node, obs+1, here+trans.II+iemit)
+			table.set(Match, node+1, obs+1, here+trans.IM+memit)
+
+			here = *table.cell(Deletion, node, obs)
+			table.set(Match, node+1, obs+1, here+trans.DM+memit)
+			table.set(Deletion, node+1, obs, here+trans.DD)
+		}
+	}
+	return *table.cell(Match, len(hmm.Nodes), seq.Len())
+}
+
 type HMMNode struct {
 	Residue             Residue
 	NodeNum             int
