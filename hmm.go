@@ -34,7 +34,6 @@ type HMM struct {
 }
 
 type HMMNode struct {
-	HMM                 *HMM
 	Residue             Residue
 	NodeNum             int
 	InsEmit             EProbs
