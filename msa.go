@@ -23,6 +23,13 @@ func (m MSA) Len() int {
 	return m.length
 }
 
+// SetLen allows you to override the length of the MSA. Only use this if you
+// know what you're doing. (The Add and AddFasta methods will update this
+// for you automatically.)
+func (m *MSA) SetLen(n int) {
+	m.length = n
+}
+
 // Slice returns a slice of the given MSA by slicing each sequence in the MSA.
 // Slicing an empty MSA will panic.
 //
