@@ -33,7 +33,7 @@ type HMM struct {
 	Null EProbs
 }
 
-type dynamicTable struct {
+type DynamicTable struct {
 	scores []Prob
 	nodes  int
 }
@@ -46,32 +46,41 @@ type dynamicTable struct {
 // The only states used are Match, Deletion and Insertion.
 //
 // Each value is initialized to a minimum probability.
-func (hmm *HMM) allocTable(seqLen int) *dynamicTable {
-	nodes := len(hmm.Nodes) + 1
-	t := &dynamicTable{
+func AllocTable(numNodes int, seqLen int) *DynamicTable {
+	nodes := numNodes + 1
+	t := &DynamicTable{
 		scores: make([]Prob, 3*nodes*(seqLen+1)),
 		nodes:  nodes,
 	}
-	for i := 0; i < len(t.scores); i++ {
-		t.scores[i] = MinProb
-	}
+	t.reset()
 	return t
 }
 
-func (t *dynamicTable) cell(state HMMState, node int, obs int) *Prob {
-	return &t.scores[int(state)+3*(node+t.nodes*obs)]
+func (t *DynamicTable) index(state HMMState, node int, obs int) int {
+	return int(state) + 3*(node+t.nodes*obs)
 }
 
-func (t *dynamicTable) set(state HMMState, node int, obs int, p Prob) {
-	succ := t.cell(state, node, obs)
-	if p < *succ {
-		*succ = p
+func (t *DynamicTable) set(state HMMState, node int, obs int, p Prob) {
+	i := t.index(state, node, obs)
+	if t.scores[i].Less(p) {
+		t.scores[i] = p
+	}
+}
+
+func (t *DynamicTable) reset() {
+	for i := 0; i < len(t.scores); i++ {
+		t.scores[i] = MinProb
 	}
 }
 
 func (hmm *HMM) ViterbiScore(seq Sequence) Prob {
-	table := hmm.allocTable(seq.Len())
-	*table.cell(Match, 0, 0) = Prob(0.0) // The begin node.
+	table := AllocTable(len(hmm.Nodes), seq.Len())
+	return hmm.ViterbiScoreMem(seq, table)
+}
+
+func (hmm *HMM) ViterbiScoreMem(seq Sequence, table *DynamicTable) Prob {
+	table.reset()
+	table.scores[table.index(Match, 0, 0)] = Prob(0.0) // The begin node.
 
 	var trans TProbs
 	var residue Residue
@@ -80,28 +89,28 @@ func (hmm *HMM) ViterbiScore(seq Sequence) Prob {
 		for obs := 0; obs < seq.Len(); obs++ {
 			trans = hmm.Nodes[node].Transitions
 			residue = seq.Residues[obs]
-			iemit = hmm.Nodes[node].InsEmit[residue]
+			iemit = hmm.Nodes[node].InsEmit.Lookup(residue)
 			if node+1 < len(hmm.Nodes) {
-				memit = hmm.Nodes[node+1].MatEmit[residue]
+				memit = hmm.Nodes[node+1].MatEmit.Lookup(residue)
 			} else {
-				memit = 0.0
+				memit = 0.0 // Force into match state for end node.
 			}
 
-			here = *table.cell(Match, node, obs)
+			here = table.scores[table.index(Match, node, obs)]
 			table.set(Insertion, node, obs+1, here+trans.MI+iemit)
 			table.set(Match, node+1, obs+1, here+trans.MM+memit)
 			table.set(Deletion, node+1, obs, here+trans.MD)
 
-			here = *table.cell(Insertion, node, obs)
+			here = table.scores[table.index(Insertion, node, obs)]
 			table.set(Insertion, node, obs+1, here+trans.II+iemit)
 			table.set(Match, node+1, obs+1, here+trans.IM+memit)
 
-			here = *table.cell(Deletion, node, obs)
+			here = table.scores[table.index(Deletion, node, obs)]
 			table.set(Match, node+1, obs+1, here+trans.DM+memit)
 			table.set(Deletion, node+1, obs, here+trans.DD)
 		}
 	}
-	return *table.cell(Match, len(hmm.Nodes), seq.Len())
+	return table.scores[table.index(Match, len(hmm.Nodes), seq.Len())]
 }
 
 type HMMNode struct {
@@ -114,45 +123,68 @@ type HMMNode struct {
 }
 
 // EProbs represents emission probabilities, as log-odds scores.
-type EProbs map[Residue]Prob
+// The representation of EProbs should not be used by clients; it is exported
+// only for convenience with marshalling APIs.
+type EProbs struct {
+	Offset Residue
+	Probs  []Prob
+}
 
 // NewEProbs creates a new EProbs map from the given alphabet. Keys of the map
 // are residues defined in the alphabet, and values are defaulted to the
 // minimum probability.
 func NewEProbs(alphabet Alphabet) EProbs {
-	ep := make(EProbs, len(alphabet))
-	for _, residue := range alphabet {
-		ep[residue] = MinProb
+	offset, max := Residue(255), Residue(0)
+	for _, r := range alphabet {
+		if r < offset {
+			offset = r
+		}
+		if r > max {
+			max = r
+		}
 	}
-	return ep
+	probs := make([]Prob, 1+max-offset)
+	for i := range probs {
+		probs[i] = MinProb
+	}
+	return EProbs{offset, probs}
 }
 
 // Returns the emission probability for a particular residue.
-func (ep EProbs) EmitProb(r Residue) Prob {
-	return ep[r]
+func (ep EProbs) Lookup(r Residue) Prob {
+	i := r - ep.Offset
+	if i < 0 || int(i) >= len(ep.Probs) {
+		return MinProb
+	}
+	return ep.Probs[r-ep.Offset]
 }
 
-func (ep *EProbs) MarshalJSON() ([]byte, error) {
-	strmap := make(map[string]Prob, len(*ep))
-	for k, v := range *ep {
-		strmap[string(k)] = v
-	}
-	return json.Marshal(strmap)
+// Set sets the emission probability of the given residue.
+func (ep *EProbs) Set(r Residue, p Prob) {
+	ep.Probs[r-ep.Offset] = p
 }
 
-func (ep *EProbs) UnmarshalJSON(bs []byte) error {
-	var strmap map[string]Prob
-	if err := json.Unmarshal(bs, &strmap); err != nil {
-		return err
-	}
-	if *ep == nil {
-		*ep = make(EProbs, len(strmap))
-	}
-	for k, v := range strmap {
-		(*ep)[Residue(k[0])] = v
-	}
-	return nil
-}
+// func (ep *EProbs) MarshalJSON() ([]byte, error) {
+// strmap := make(map[string]Prob, len(*ep))
+// for k, v := range *ep {
+// strmap[string(k)] = v
+// }
+// return json.Marshal(strmap)
+// }
+//
+// func (ep *EProbs) UnmarshalJSON(bs []byte) error {
+// var strmap map[string]Prob
+// if err := json.Unmarshal(bs, &strmap); err != nil {
+// return err
+// }
+// if *ep == nil {
+// *ep = make(EProbs, len(strmap))
+// }
+// for k, v := range strmap {
+// (*ep)[Residue(k[0])] = v
+// }
+// return nil
+// }
 
 // TProbs represents transition probabilities, as log-odds scores.
 // Note that ID and DI are omitted (Plan7).

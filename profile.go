@@ -47,7 +47,7 @@ func (p *Profile) String() string {
 	for _, r := range p.Alphabet {
 		pf("%c", rune(r))
 		for _, eprobs := range p.Emissions {
-			pf("\t%0.4f", eprobs[r])
+			pf("\t%0.4f", eprobs.Lookup(r))
 		}
 		pf("\n")
 	}
@@ -169,11 +169,11 @@ func (fp *FrequencyProfile) Profile(null *FrequencyProfile) *Profile {
 		tot := freqTotal(fp.Freqs[column])
 		for _, residue := range fp.Alphabet {
 			if null.Freqs[0][residue] == 0 || fp.Freqs[column][residue] == 0 {
-				p.Emissions[column][residue] = MinProb
+				p.Emissions[column].Set(residue, MinProb)
 			} else {
 				prob := float64(fp.Freqs[column][residue]) / float64(tot)
 				logOdds := -Prob(math.Log(prob / nullemit[residue]))
-				p.Emissions[column][residue] = logOdds
+				p.Emissions[column].Set(residue, logOdds)
 			}
 		}
 	}
