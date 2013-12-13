@@ -118,6 +118,20 @@ func (fp *FrequencyProfile) Len() int {
 	return len(fp.Freqs)
 }
 
+// Combine adds the given frequency profile to the current one.
+// Both profiles must have the same number of columns.
+func (fp1 *FrequencyProfile) Combine(fp2 *FrequencyProfile) {
+	if fp1.Len() != fp2.Len() {
+		panic(fmt.Sprintf("Profile has length %d but other profile has "+
+			"length %d", fp1.Len(), fp2.Len()))
+	}
+	for c := 0; c < fp1.Len(); c++ {
+		for residue := range fp1.Freqs[c] {
+			fp1.Freqs[c][residue] += fp2.Freqs[c][residue]
+		}
+	}
+}
+
 // Add adds the sequence to the given profile. The sequence must have length
 // equivalent to the number of columns in the profile. The sequence must also
 // only contain residues that are in the alphabet for the profile.
