@@ -164,28 +164,6 @@ func (ep *EProbs) Set(r Residue, p Prob) {
 	ep.Probs[r-ep.Offset] = p
 }
 
-// func (ep *EProbs) MarshalJSON() ([]byte, error) {
-// strmap := make(map[string]Prob, len(*ep))
-// for k, v := range *ep {
-// strmap[string(k)] = v
-// }
-// return json.Marshal(strmap)
-// }
-//
-// func (ep *EProbs) UnmarshalJSON(bs []byte) error {
-// var strmap map[string]Prob
-// if err := json.Unmarshal(bs, &strmap); err != nil {
-// return err
-// }
-// if *ep == nil {
-// *ep = make(EProbs, len(strmap))
-// }
-// for k, v := range strmap {
-// (*ep)[Residue(k[0])] = v
-// }
-// return nil
-// }
-
 // TProbs represents transition probabilities, as log-odds scores.
 // Note that ID and DI are omitted (Plan7).
 type TProbs struct {
