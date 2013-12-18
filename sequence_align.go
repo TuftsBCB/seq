@@ -4,8 +4,10 @@ import (
 	"fmt"
 )
 
+// Alignment represents the result of aligning two sequences.
 type Alignment struct {
-	A, B []Residue
+	A []Residue // Reference
+	B []Residue // Query
 }
 
 func newAlignment(length int) Alignment {
@@ -19,16 +21,19 @@ func newAlignment(length int) Alignment {
 // of sequences. A function `subst` should return alignment scores for
 // pairs of residues. This package provides some functions suitable for
 // this purpose, e.g., MatBlosum62, MatDNA, MatRNA, etc.
-func NeedlemanWunsch(A, B []Residue, subst MatLookup) Alignment {
+func NeedlemanWunsch(A, B []Residue, subst SubstMatrix) Alignment {
 	// This implementation is taken from the "Needleman-Wunsch_algorithm"
 	// Wikipedia article.
 	// rows correspond to residues in A
 	// cols correspond to residues in B
 
 	// Initialization.
+	var p int
 	r, c := len(A)+1, len(B)+1
-	gapPenalty := subst('-', '-')
 	matrix := make([]int, r*c)
+	idx := subst.Alphabet.Index()
+	sub := subst.Scores
+	gapPenalty := sub[idx['-']][idx['-']]
 
 	// Compute the matrix.
 	for i := 0; i < r; i++ {
@@ -37,13 +42,23 @@ func NeedlemanWunsch(A, B []Residue, subst MatLookup) Alignment {
 	for j := 0; j < c; j++ {
 		matrix[0*c+j] = gapPenalty * j
 	}
+
+	var diag, sleft, sup int
+	var subsub []int
 	for i := 1; i < r; i++ {
+		subsub = sub[idx[A[i-1]]]
 		for j := 1; j < c; j++ {
-			p := i*c + j
-			matrix[p] = max3(
-				matrix[p-c-1]+subst(A[i-1], B[j-1]),
-				matrix[p-c]+gapPenalty,
-				matrix[p-1]+gapPenalty)
+			p = i*c + j
+			diag = matrix[p-c-1] + subsub[idx[B[j-1]]]
+			sup, sleft = matrix[p-c]+gapPenalty, matrix[p-1]+gapPenalty
+			switch {
+			case diag > sup && diag > sleft:
+				matrix[p] = diag
+			case sup > sleft:
+				matrix[p] = sup
+			default:
+				matrix[p] = sleft
+			}
 		}
 	}
 
@@ -51,9 +66,10 @@ func NeedlemanWunsch(A, B []Residue, subst MatLookup) Alignment {
 	aligned := newAlignment(max(r, c))
 	i, j := r-1, c-1
 	for i > 0 || j > 0 {
-		p := i*c + j
+		p = i*c + j
 		switch {
-		case i > 0 && j > 0 && matrix[p] == matrix[p-c-1]+subst(A[i-1], B[j-1]):
+		case i > 0 && j > 0 &&
+			matrix[p] == matrix[p-c-1]+sub[idx[A[i-1]]][idx[B[j-1]]]:
 			aligned.A = append(aligned.A, A[i-1])
 			aligned.B = append(aligned.B, B[j-1])
 			i--

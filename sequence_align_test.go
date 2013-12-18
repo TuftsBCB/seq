@@ -9,7 +9,7 @@ import (
 type alignTest struct {
 	seq1, seq2 string
 	out1, out2 string
-	subst      MatLookup
+	subst      SubstMatrix
 }
 
 var alignTests = []alignTest{
@@ -66,63 +66,63 @@ var alignTests = []alignTest{
 			"TKHKDTELRSSTALNTNALYDPPVNFNAFLDDESLDGEDIVAWVNLGLHHLPNSNDLPNT" +
 			"IFSTAHASFMLTPFNYFDSENSRDTTQQVFYTYDDETEESNWEFYGNDWSSCGVEVAEPN" +
 			"FEDYTYGRGTRINKK--------",
-		MatBlosum62,
+		SubstBlosum62,
 	},
 	{
 		"ABCD",
 		"ABCD",
 		"ABCD",
 		"ABCD",
-		MatBlosum62,
+		SubstBlosum62,
 	},
 	{
 		"GHIKLMNPQR",
 		"GAAAHIKLMN",
 		"G---HIKLMNPQR",
 		"GAAAHIKLMN---",
-		MatBlosum62,
+		SubstBlosum62,
 	},
 	{
 		"GHIKLMNPQRSTVW",
 		"GAAAHIKLMNPQRSTVW",
 		"G---HIKLMNPQRSTVW",
 		"GAAAHIKLMNPQRSTVW",
-		MatBlosum62,
+		SubstBlosum62,
 	},
 	{
 		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
 		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
 		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
 		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-		MatBlosum62,
+		SubstBlosum62,
 	},
 	{
 		"NNNNNNNN",
 		"NNNNNNNN",
 		"NNNNNNNN",
 		"NNNNNNNN",
-		MatBlosum62,
+		SubstBlosum62,
 	},
 	{
 		"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
 		"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
 		"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
 		"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
-		MatBlosum62,
+		SubstBlosum62,
 	},
 	{
 		"ABCDEFGWXYZ",
 		"ABCDEFMNPQRSTZABEGWXYZ",
 		"ABCDEF-----------GWXYZ",
 		"ABCDEFMNPQRSTZABEGWXYZ",
-		MatBlosum62,
+		SubstBlosum62,
 	},
 	{
 		"ACTG",
 		"ACTG",
 		"ACTG",
 		"ACTG",
-		MatDNA,
+		SubstDNA,
 	},
 }
 
@@ -173,7 +173,7 @@ but should have been (%d, %d)
 func ExampleNeedlemanWunsch() {
 	s1 := NewSequenceString("seq1", "GHIKLMNPQR")
 	s2 := NewSequenceString("seq1", "GAAAHIKLMN")
-	aligned := NeedlemanWunsch(s1.Residues, s2.Residues, MatBlosum62)
+	aligned := NeedlemanWunsch(s1.Residues, s2.Residues, SubstBlosum62)
 
 	fmt.Printf("%s\n", aligned.A)
 	fmt.Printf("%s\n", aligned.B)

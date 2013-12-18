@@ -4,14 +4,34 @@ import (
 	"encoding/json"
 )
 
+// Alphabet corresponds to a set of residues, in a particular order, that
+// capture all possible residues of a particular set of sequences. For example,
+// this is used in frequency profiles and HMMs to specify which amino acids
+// are represented in the probabilistic model.
+//
+// In most cases, the ordering of the alphabet is significant. For example,
+// the indices of an alphabet may be in correspondence with the indices of
+// a column in a frequency profile.
 type Alphabet []Residue
 
+// NewAlphabet creates an alphabet from the residues given.
 func NewAlphabet(residues ...Residue) Alphabet {
 	return Alphabet(residues)
 }
 
 func (a Alphabet) Len() int {
 	return len(a)
+}
+
+// Index returns a constant-time mapping from ASCII to residue index in the
+// alphabet. This depends on all residues in the alphabet being ASCII
+// characters.
+func (a Alphabet) Index() [256]int {
+	var index [256]int
+	for i, r := range a {
+		index[r] = i
+	}
+	return index
 }
 
 // Equals returns true if and only if a1 == a2.
@@ -52,8 +72,6 @@ func (a *Alphabet) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
-const alpha62letters = "ABCDEFGHIKLMNPQRSTVWXYZ-"
-
 // The default alphabet that corresponds to the BLOSUM62 matrix included
 // in this package.
 var AlphaBlosum62 = NewAlphabet(
@@ -61,13 +79,12 @@ var AlphaBlosum62 = NewAlphabet(
 	'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z', '-',
 )
 
-const alphaDNAletters = "ACTGN-"
-const alphaRNAletters = "ACUGN-"
-
+// The default alphabet for DNA sequences.
 var AlphaDNA = NewAlphabet(
 	'A', 'C', 'G', 'T', 'N', '-',
 )
 
+// The default alphabet for RNA sequences.
 var AlphaRNA = NewAlphabet(
 	'A', 'C', 'G', 'U', 'N', '-',
 )

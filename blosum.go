@@ -1,96 +1,50 @@
 package seq
 
-// MatLookup represents functions that return a score usable in sequence
-// alignment algorithms for a pair of residues. It should return a score
-// appropriate for gaps, e.g., `Lookup('-', '-')`.
-type MatLookup func(Residue, Residue) int
-
-func MatBlosum62(a, b Residue) int {
-	ai, ok := alpha62map[a]
-	if !ok {
-		ai = alpha62map['X']
-	}
-	bi, ok := alpha62map[b]
-	if !ok {
-		bi = alpha62map['X']
-	}
-	return blosum62[ai][bi]
+// SubstMatrix corresponds to a substitution matrix and an alphabet that is
+// used in sequence alignment algorithms. The matrix given should be square,
+// with rows and columns equivalent to the length of the alphabet. (This means
+// that if your substitution matrix includes gap penalties, then the alphabet
+// should also have a gap character.)
+type SubstMatrix struct {
+	Alphabet Alphabet
+	Scores   [][]int
 }
 
-func MatDNA(a, b Residue) int {
-	ai, ok := alphaDNAmap[a]
-	if !ok {
-		ai = alphaDNAmap['N']
+var (
+	identity = [][]int{
+		{
+			2, -1, -1, -1, 0, 0,
+		},
+		{
+			-1, 2, -1, -1, 0, 0,
+		},
+		{
+			-1, -1, 2, -1, 0, 0,
+		},
+		{
+			-1, -1, -1, 2, 0, 0,
+		},
+		{
+			0, 0, 0, 0, 0, 0,
+		},
+		{
+			0, 0, 0, 0, 0, 0,
+		},
 	}
-	bi, ok := alphaDNAmap[b]
-	if !ok {
-		bi = alphaDNAmap['N']
-	}
-	return identity[ai][bi]
-}
 
-func MatRNA(a, b Residue) int {
-	ai, ok := alphaRNAmap[a]
-	if !ok {
-		ai = alphaDNAmap['N']
-	}
-	bi, ok := alphaRNAmap[b]
-	if !ok {
-		bi = alphaRNAmap['N']
-	}
-	return identity[ai][bi]
-}
+	// A standard BLOSUM62 substitution matrix for amino acid sequences.
+	SubstBlosum62 = SubstMatrix{AlphaBlosum62, blosum62}
 
-var alpha62map = make(map[Residue]int)
+	// An identity substitution matrix for DNA sequences.
+	SubstDNA = SubstMatrix{AlphaDNA, identity}
 
-var alphaDNAmap = make(map[Residue]int)
-
-var alphaRNAmap = make(map[Residue]int)
-
-func init() {
-	for i, r := range AlphaBlosum62 {
-		alpha62map[r] = i
-	}
-}
-
-func init() {
-	for i, r := range AlphaDNA {
-		alphaDNAmap[r] = i
-	}
-}
-
-func init() {
-	for i, r := range AlphaRNA {
-		alphaRNAmap[r] = i
-	}
-}
-
-type substmatrix [][]int
-
-var identity = substmatrix{
-	{
-		2, -1, -1, -1, 0, 0,
-	},
-	{
-		-1, 2, -1, -1, 0, 0,
-	},
-	{
-		-1, -1, 2, -1, 0, 0,
-	},
-	{
-		-1, -1, -1, 2, 0, 0,
-	},
-	{
-		0, 0, 0, 0, 0, 0,
-	},
-	{
-		0, 0, 0, 0, 0, 0,
-	},
-}
+	// An identity substitution matrix for DNA sequences.
+	SubstRNA = SubstMatrix{AlphaRNA, identity}
+)
 
 // The indices correspond to alpha62, and can be retrieved using the
 // alpha62map. The last element in each column/row is the gap penalty.
-var blosum62 = substmatrix{
+var blosum62 = [][]int{
 	{
 		4.0, -2.0, 0.0, -2.0, -1.0, -2.0, 0.0, -2.0, -1.0, -1.0, -1.0, -1.0,
 		-2.0, -1.0, -1.0, -1.0, 1.0, 0.0, 0.0, -3.0, 0.0, -2.0, -1.0, -4.0,
