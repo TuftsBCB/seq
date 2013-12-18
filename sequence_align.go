@@ -1,8 +1,8 @@
 package seq
 
-import "fmt"
-
-var _ = fmt.Println
+import (
+	"fmt"
+)
 
 type Alignment struct {
 	A, B []Residue
@@ -26,63 +26,50 @@ func NeedlemanWunsch(A, B []Residue, subst MatLookup) Alignment {
 	// cols correspond to residues in B
 
 	// Initialization.
+	r, c := len(A)+1, len(B)+1
 	gapPenalty := subst('-', '-')
-	matrix := make([][]int, len(A)*len(B))
+	matrix := make([]int, r*c)
 
 	// Compute the matrix.
-	for i := range A {
-		matrix[i] = make([]int, len(B))
-		matrix[i][0] = gapPenalty * i
+	for i := 0; i < r; i++ {
+		matrix[i*c+0] = gapPenalty * i
 	}
-	for j := range B {
-		matrix[0][j] = gapPenalty * j
+	for j := 0; j < c; j++ {
+		matrix[0*c+j] = gapPenalty * j
 	}
-	for i := 1; i < len(A); i++ {
-		for j := 1; j < len(B); j++ {
-			matrix[i][j] = max3(
-				matrix[i-1][j-1]+subst(A[i], B[j]),
-				matrix[i-1][j]+gapPenalty,
-				matrix[i][j-1]+gapPenalty)
+	for i := 1; i < r; i++ {
+		for j := 1; j < c; j++ {
+			p := i*c + j
+			matrix[p] = max3(
+				matrix[p-c-1]+subst(A[i-1], B[j-1]),
+				matrix[p-c]+gapPenalty,
+				matrix[p-1]+gapPenalty)
 		}
 	}
 
-	// Now trace an optimal path through the matrix starting at (len(A), len(B))
-	aligned := newAlignment(max(len(A), len(B)))
-	i, j := len(A)-1, len(B)-1
-	for i > 0 && j > 0 {
-		s := matrix[i][j]
-		sdiag := matrix[i-1][j-1]
-		// sup := matrix[i][j-1]
-		sleft := matrix[i-1][j]
+	// Now trace an optimal path through the matrix starting at (r, c)
+	aligned := newAlignment(max(r, c))
+	i, j := r-1, c-1
+	for i > 0 || j > 0 {
+		p := i*c + j
 		switch {
-		case s == sdiag+subst(A[i], B[j]):
-			aligned.A = append(aligned.A, A[i])
-			aligned.B = append(aligned.B, B[j])
+		case i > 0 && j > 0 && matrix[p] == matrix[p-c-1]+subst(A[i-1], B[j-1]):
+			aligned.A = append(aligned.A, A[i-1])
+			aligned.B = append(aligned.B, B[j-1])
 			i--
 			j--
-		case s == sleft+gapPenalty:
-			aligned.A = append(aligned.A, A[i])
+		case i > 0 && matrix[p] == matrix[p-c]+gapPenalty:
+			aligned.A = append(aligned.A, A[i-1])
 			aligned.B = append(aligned.B, '-')
 			i--
-		default:
+		case j > 0 && matrix[p] == matrix[p-1]+gapPenalty:
 			aligned.A = append(aligned.A, '-')
-			aligned.B = append(aligned.B, B[j])
+			aligned.B = append(aligned.B, B[j-1])
 			j--
+		default:
+			panic(fmt.Sprintf("BUG in NeedlemanWunsch: No path at (%d, %d)",
+				i, j))
 		}
-	}
-	if i == 0 || j == 0 {
-		aligned.A = append(aligned.A, A[i])
-		aligned.B = append(aligned.B, B[j])
-	}
-	for i > 0 {
-		i--
-		aligned.A = append(aligned.A, A[i])
-		aligned.B = append(aligned.B, '-')
-	}
-	for j > 0 {
-		j--
-		aligned.A = append(aligned.A, '-')
-		aligned.B = append(aligned.B, B[j])
 	}
 
 	// Since we built the alignment in backwards, we must reverse the alignment.
@@ -90,7 +77,6 @@ func NeedlemanWunsch(A, B []Residue, subst MatLookup) Alignment {
 		aligned.A[i], aligned.A[j] = aligned.A[j], aligned.A[i]
 		aligned.B[i], aligned.B[j] = aligned.B[j], aligned.B[i]
 	}
-
 	return aligned
 }
 
