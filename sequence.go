@@ -14,6 +14,17 @@ type Sequence struct {
 // A Residue corresponds to a single entry in a sequence.
 type Residue byte
 
+// NewSequenceString is a convenience function for constructing a sequence
+// from a string. It is otherwise appropriate to create new Sequence values
+// directly.
+func NewSequenceString(name, srs string) Sequence {
+	rs := make([]Residue, len(srs))
+	for i := range srs {
+		rs[i] = Residue(srs[i])
+	}
+	return Sequence{Name: name, Residues: rs}
+}
+
 // Copy returns a deep copy of the sequence.
 func (s Sequence) Copy() Sequence {
 	residues := make([]Residue, len(s.Residues))
