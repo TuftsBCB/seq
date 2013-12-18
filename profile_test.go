@@ -20,6 +20,18 @@ func o(freq, coltotal, nullfreq, nulltot int) Prob {
 	return -Prob(math.Log(num / den))
 }
 
+func newEProbs(alpha Alphabet, probs []map[Residue]Prob) []EProbs {
+	eps := make([]EProbs, 0, len(probs))
+	for _, m := range probs {
+		ep := NewEProbs(alpha)
+		for r, p := range m {
+			ep.Set(r, p)
+		}
+		eps = append(eps, ep)
+	}
+	return eps
+}
+
 var tests = []struct {
 	pexpected *Profile
 	fexpected *FrequencyProfile
@@ -29,11 +41,11 @@ var tests = []struct {
 	{
 		pexpected: &Profile{
 			Alphabet: shortAlpha,
-			Emissions: []EProbs{
+			Emissions: newEProbs(shortAlpha, []map[Residue]Prob{
 				{'A': o(3, 3, 3, 9), 'B': o(0, 3, 3, 9), 'C': o(0, 3, 3, 9)},
 				{'A': o(0, 3, 3, 9), 'B': o(3, 3, 3, 9), 'C': o(0, 3, 3, 9)},
 				{'A': o(0, 3, 3, 9), 'B': o(0, 3, 3, 9), 'C': o(3, 3, 3, 9)},
-			},
+			}),
 		},
 		fexpected: &FrequencyProfile{
 			Alphabet: shortAlpha,
@@ -56,11 +68,11 @@ var tests = []struct {
 	{
 		pexpected: &Profile{
 			Alphabet: shortAlpha,
-			Emissions: []EProbs{
+			Emissions: newEProbs(shortAlpha, []map[Residue]Prob{
 				{'A': o(1, 3, 3, 9), 'B': o(2, 3, 3, 9), 'C': o(0, 3, 3, 9)},
 				{'A': o(0, 3, 3, 9), 'B': o(1, 3, 3, 9), 'C': o(2, 3, 3, 9)},
 				{'A': o(2, 3, 3, 9), 'B': o(0, 3, 3, 9), 'C': o(1, 3, 3, 9)},
-			},
+			}),
 		},
 		fexpected: &FrequencyProfile{
 			Alphabet: shortAlpha,
@@ -83,11 +95,11 @@ var tests = []struct {
 	{
 		pexpected: &Profile{
 			Alphabet: shortAlpha,
-			Emissions: []EProbs{
+			Emissions: newEProbs(shortAlpha, []map[Residue]Prob{
 				{'A': o(0, 3, 1, 9), 'B': o(2, 3, 2, 9), 'C': o(1, 3, 6, 9)},
 				{'A': o(0, 3, 1, 9), 'B': o(0, 3, 2, 9), 'C': o(3, 3, 6, 9)},
 				{'A': o(1, 3, 1, 9), 'B': o(0, 3, 2, 9), 'C': o(2, 3, 6, 9)},
-			},
+			}),
 		},
 		fexpected: &FrequencyProfile{
 			Alphabet: shortAlpha,
