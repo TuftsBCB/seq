@@ -170,6 +170,18 @@ but should have been (%d, %d)
 	}
 }
 
+func ExampleNeedlemanWunsch() {
+	s1 := NewSequenceString("seq1", "GHIKLMNPQR")
+	s2 := NewSequenceString("seq1", "GAAAHIKLMN")
+	aligned := NeedlemanWunsch(s1.Residues, s2.Residues, MatBlosum62)
+
+	fmt.Printf("%s\n", aligned.A)
+	fmt.Printf("%s\n", aligned.B)
+	// Output:
+	// G---HIKLMNPQR
+	// GAAAHIKLMN---
+}
+
 func stringToSeq(s string) []Residue {
 	residues := make([]Residue, len(s))
 	for i := range s {
