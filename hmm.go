@@ -33,12 +33,14 @@ type HMM struct {
 	Null EProbs
 }
 
+// DynamicTable represents a dynamic programming table used in sequence
+// alignment algorithms like Viterbi.
 type DynamicTable struct {
 	scores []Prob
 	nodes  int
 }
 
-// allocTable returns a freshly allocated dynamic programming table for use
+// AllocTable returns a freshly allocated dynamic programming table for use
 // in HMM alogirthms like Viterbi. It is indexed by HMM state, node index and
 // sequence length, in that order. The total size of the table is equal to
 // (#states * (#nodes + 1) * (seqLen + 1)).
@@ -73,11 +75,25 @@ func (t *DynamicTable) reset() {
 	}
 }
 
+// ViterbiScore returns the probability of the likeliest path through the HMM
+// for the given sequence.
+//
+// If you're running Viterbi in a performance critical section, ViterbiScoreMem
+// may be appropriate.
+//
+// Note that the state path is not computed.
 func (hmm *HMM) ViterbiScore(seq Sequence) Prob {
 	table := AllocTable(len(hmm.Nodes), seq.Len())
 	return hmm.ViterbiScoreMem(seq, table)
 }
 
+// ViterbiScoreMem is the same as ViterbiScore, except it does not allocate,
+// which makes it faster in performance critical sections of code. This is done
+// by passing a pre-allocated dynamic programming table created by AllocTable
+// function.
+//
+// Note that the caller must ensure that only one goroutine is calling
+// ViterbiScoreMem with the same dynamic programming table.
 func (hmm *HMM) ViterbiScoreMem(seq Sequence, table *DynamicTable) Prob {
 	table.reset()
 	table.scores[table.index(Match, 0, 0)] = Prob(0.0) // The begin node.
@@ -113,6 +129,12 @@ func (hmm *HMM) ViterbiScoreMem(seq Sequence, table *DynamicTable) Prob {
 	return table.scores[table.index(Match, len(hmm.Nodes), seq.Len())]
 }
 
+// HMMNode represents a single node in an HMM, including the reference residue,
+// the node index, insertion emissions, match emissions, transition
+// probabilities.
+//
+// The NeffM, NeffI and NeffD aren't used, but are included since they exist
+// in common HMM file formats.
 type HMMNode struct {
 	Residue             Residue
 	NodeNum             int
