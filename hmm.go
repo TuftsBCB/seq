@@ -269,6 +269,20 @@ func (p *Prob) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
+// HMMCat joins two HMMs together. The HMMs given are not modified.
+// Both HMMs must have the same alphabet.
+// The null emissions for the first HMM are used.
+func HMMCat(h1, h2 *HMM) *HMM {
+	nodes := make([]HMMNode, len(h1.Nodes)+len(h2.Nodes))
+	copy(nodes, h1.Nodes)
+	copy(nodes[len(h1.Nodes):], h2.Nodes)
+	return &HMM{
+		Nodes:    nodes,
+		Alphabet: h1.Alphabet,
+		Null:     h1.Null,
+	}
+}
+
 // NewHMM creates a new HMM from a list of nodes, an ordered alphabet and a
 // set of null probabilities (which may be nil).
 func NewHMM(nodes []HMMNode, alphabet []Residue, null EProbs) *HMM {
